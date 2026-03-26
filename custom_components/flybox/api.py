@@ -91,10 +91,13 @@ class FlyboxApiClient:
         return result.get("data", {})
 
     async def async_get_data(self) -> dict:
-        """Refresh CSRF token then fetch all device and WiFi data."""
+        """Fetch all device and WiFi data, refreshing CSRF token before each request."""
         await self.async_refresh_csrf_token()
         device_data = await self.async_fetch(DEVICE_KEYS)
+
+        await self.async_refresh_csrf_token()
         wifi_data = await self.async_fetch(WIFI_KEYS)
+
         return {**device_data, **wifi_data}
 
     async def async_close(self) -> None:
