@@ -1,7 +1,7 @@
 {
   "domain": "flybox",
   "name": "Orange Flybox",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "documentation": "https://github.com/mejmo/hass-flybox-component",
   "requirements": [],
   "dependencies": [],
