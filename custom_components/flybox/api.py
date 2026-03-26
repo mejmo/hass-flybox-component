@@ -11,7 +11,6 @@ from .const import ENDPOINT, DEVICE_KEYS, WIFI_KEYS
 _LOGGER = logging.getLogger(__name__)
 
 CSRF_ENDPOINT = "/goform/x_csrf_token"
-REFERER = "http://{host}/home/index.html"
 
 
 def _log_request(method: str, url: str, headers: dict, body: dict | None = None) -> None:
@@ -35,17 +34,16 @@ class FlyboxApiClient:
         self.host = host
         self._url = f"http://{host}{ENDPOINT}"
         self._csrf_url = f"http://{host}{CSRF_ENDPOINT}"
-        self._referer = REFERER.format(host=host)
         self._csrf_token: str | None = None
         self._session: aiohttp.ClientSession | None = None
 
     def _make_headers(self) -> dict[str, str]:
         headers = {
-            "Accept": "application/json, text/javascript, */*; q=0.01",
             "Content-Type": "application/json",
             "X-Requested-With": "XMLHttpRequest",
-            "Referer": self._referer,
-            "Origin": f"http://{self.host}",
+            "X-Frame-Options": "SAMEORIGIN",
+            "X-Content-Type-Options": "nosniff",
+            "X-XSS-Protection": "1; mode=block",
         }
         if self._csrf_token:
             headers["X-Csrf-Token"] = self._csrf_token
