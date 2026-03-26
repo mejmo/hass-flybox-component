@@ -39,11 +39,7 @@ async def validate_connection(hass: HomeAssistant, host: str) -> str:
             timeout=timeout,
             cookie_jar=aiohttp.CookieJar(unsafe=True),
         ) as session:
-            # Step 1: load home page to establish the session cookie
-            async with session.get(referer) as home_resp:
-                home_resp.raise_for_status()
-
-            # Step 2: obtain CSRF token (cookie is now present)
+            # Step 1: obtain CSRF token — response also sets the session cookie
             async with session.get(
                 csrf_url,
                 headers={
@@ -56,7 +52,7 @@ async def validate_connection(hass: HomeAssistant, host: str) -> str:
                 if not csrf_token:
                     raise CannotConnect("No CSRF token in response")
 
-            # Step 3: fetch operator name
+            # Step 2: fetch operator name (cookie from CSRF response is now in jar)
             async with session.post(
                 data_url,
                 json={"keys": ["mnet_operator_name"]},
