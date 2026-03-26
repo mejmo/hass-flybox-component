@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import random
 from datetime import timedelta
 
 import aiohttp
@@ -12,7 +13,7 @@ from .const import DOMAIN, ENDPOINT, DEVICE_KEYS, WIFI_KEYS
 
 _LOGGER = logging.getLogger(__name__)
 
-LOGIN_ENDPOINT = "/goform/get_login_info"
+CSRF_ENDPOINT = "/goform/x_csrf_token"
 REFERER = "http://{host}/home/index.html"
 
 
@@ -28,7 +29,7 @@ class FlyboxCoordinator(DataUpdateCoordinator[dict]):
         )
         self.host = host
         self._url = f"http://{host}{ENDPOINT}"
-        self._login_url = f"http://{host}{LOGIN_ENDPOINT}"
+        self._csrf_url = f"http://{host}{CSRF_ENDPOINT}"
         self._referer = REFERER.format(host=host)
         self._csrf_token: str | None = None
         self._session: aiohttp.ClientSession | None = None
@@ -52,16 +53,15 @@ class FlyboxCoordinator(DataUpdateCoordinator[dict]):
         return self._session
 
     async def _refresh_csrf_token(self) -> None:
-        """Fetch a fresh CSRF token from the login endpoint."""
+        """Fetch a fresh CSRF token from the x_csrf_token endpoint."""
         session = await self._ensure_session()
+        url = f"{self._csrf_url}?v={random.random()}"
         try:
-            async with session.post(
-                self._login_url, headers=self._make_headers()
-            ) as resp:
+            async with session.get(url, headers=self._make_headers()) as resp:
                 resp.raise_for_status()
                 token = resp.headers.get("X-Csrf-Token")
                 if not token:
-                    raise UpdateFailed("No X-Csrf-Token in login response headers")
+                    raise UpdateFailed("No X-Csrf-Token in response headers")
                 self._csrf_token = token
                 _LOGGER.debug("Refreshed CSRF token from Flybox")
         except aiohttp.ClientError as err:

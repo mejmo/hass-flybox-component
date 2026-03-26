@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import random
 
 import aiohttp
 import voluptuous as vol
@@ -14,7 +15,7 @@ from .const import DOMAIN, DEFAULT_HOST, DEFAULT_SCAN_INTERVAL, ENDPOINT
 
 _LOGGER = logging.getLogger(__name__)
 
-LOGIN_ENDPOINT = "/goform/get_login_info"
+CSRF_ENDPOINT = "/goform/x_csrf_token"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -28,7 +29,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_connection(hass: HomeAssistant, host: str) -> str:
     """Validate router connectivity and return a title string."""
-    login_url = f"http://{host}{LOGIN_ENDPOINT}"
+    csrf_url = f"http://{host}{CSRF_ENDPOINT}?v={random.random()}"
     data_url = f"http://{host}{ENDPOINT}"
     referer = f"http://{host}/home/index.html"
     timeout = aiohttp.ClientTimeout(total=10)
@@ -36,18 +37,17 @@ async def validate_connection(hass: HomeAssistant, host: str) -> str:
     try:
         async with aiohttp.ClientSession(timeout=timeout) as session:
             # Step 1: obtain CSRF token
-            async with session.post(
-                login_url,
+            async with session.get(
+                csrf_url,
                 headers={
-                    "Content-Type": "application/json",
                     "X-Requested-With": "XMLHttpRequest",
                     "Referer": referer,
                 },
-            ) as login_resp:
-                login_resp.raise_for_status()
-                csrf_token = login_resp.headers.get("X-Csrf-Token")
+            ) as csrf_resp:
+                csrf_resp.raise_for_status()
+                csrf_token = csrf_resp.headers.get("X-Csrf-Token")
                 if not csrf_token:
-                    raise CannotConnect("No CSRF token in login response")
+                    raise CannotConnect("No CSRF token in response")
 
             # Step 2: fetch operator name
             async with session.post(
