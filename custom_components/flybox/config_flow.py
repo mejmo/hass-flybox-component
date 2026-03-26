@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import logging
-import random
 
-import aiohttp
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,11 +9,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN, DEFAULT_HOST, DEFAULT_SCAN_INTERVAL, ENDPOINT
+from .api import FlyboxApiClient, FlyboxApiError
+from .const import DOMAIN, DEFAULT_HOST, DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
-
-CSRF_ENDPOINT = "/goform/x_csrf_token"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -29,50 +26,18 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_connection(hass: HomeAssistant, host: str) -> str:
     """Validate router connectivity and return a title string."""
-    csrf_url = f"http://{host}{CSRF_ENDPOINT}?v={random.random()}"
-    data_url = f"http://{host}{ENDPOINT}"
-    referer = f"http://{host}/home/index.html"
-    timeout = aiohttp.ClientTimeout(total=10)
-
+    client = FlyboxApiClient(host)
     try:
-        async with aiohttp.ClientSession(
-            timeout=timeout,
-            cookie_jar=aiohttp.CookieJar(unsafe=True),
-        ) as session:
-            # Step 1: obtain CSRF token — response also sets the session cookie
-            async with session.get(
-                csrf_url,
-                headers={
-                    "X-Requested-With": "XMLHttpRequest",
-                    "Referer": referer,
-                },
-            ) as csrf_resp:
-                csrf_resp.raise_for_status()
-                csrf_token = csrf_resp.headers.get("X-Csrf-Token")
-                if not csrf_token:
-                    raise CannotConnect("No CSRF token in response")
-
-            # Step 2: fetch operator name (cookie from CSRF response is now in jar)
-            async with session.post(
-                data_url,
-                json={"keys": ["mnet_operator_name"]},
-                headers={
-                    "Content-Type": "application/json",
-                    "X-Requested-With": "XMLHttpRequest",
-                    "X-Csrf-Token": csrf_token,
-                    "Referer": referer,
-                    "Origin": f"http://{host}",
-                },
-            ) as resp:
-                resp.raise_for_status()
-                result = await resp.json(content_type=None)
-    except aiohttp.ClientError as err:
+        await client.async_refresh_csrf_token()
+        data = await client.async_fetch(["mnet_operator_name"])
+    except FlyboxApiError as err:
+        raise CannotConnect(str(err)) from err
+    except Exception as err:
         raise CannotConnect(f"Connection failed: {err}") from err
+    finally:
+        await client.async_close()
 
-    if result.get("retcode") != 0:
-        raise CannotConnect("Router returned a non-zero retcode")
-
-    operator = result.get("data", {}).get("mnet_operator_name") or "Flybox"
+    operator = data.get("mnet_operator_name") or "Flybox"
     return f"{operator} Flybox"
 
 
