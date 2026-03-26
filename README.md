@@ -99,16 +99,9 @@ A Home Assistant custom integration for **Orange Flybox** mobile routers. It pol
 
 ## Debug Logging
 
-To enable full request/response logging, add the following to your `configuration.yaml`:
+Go to **Settings → Devices & Services → Orange Flybox → Enable debug logging**. This toggles debug-level logs for the integration without editing any YAML files.
 
-```yaml
-logger:
-  default: warning
-  logs:
-    custom_components.flybox: debug
-```
-
-Each poll cycle will log the complete HTTP conversation — request URL, headers, body, response status, headers, and JSON body — in pretty-printed format.
+Each poll cycle will log the complete HTTP conversation — request URL, headers, body, response status, headers, and JSON body — in pretty-printed format. Logs are visible under **Settings → System → Logs**.
 
 ---
 
