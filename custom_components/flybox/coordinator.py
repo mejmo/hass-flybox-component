@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import random
 from datetime import timedelta
@@ -15,6 +16,23 @@ _LOGGER = logging.getLogger(__name__)
 
 CSRF_ENDPOINT = "/goform/x_csrf_token"
 REFERER = "http://{host}/home/index.html"
+
+
+def _log_request(method: str, url: str, headers: dict, body: dict | None = None) -> None:
+    msg = f">>> {method} {url}\nHeaders: {json.dumps(dict(headers), indent=2)}"
+    if body is not None:
+        msg += f"\nBody: {json.dumps(body, indent=2)}"
+    _LOGGER.debug(msg)
+
+
+def _log_response(status: int, headers: aiohttp.CIMultiDictProxy, body: dict | str | None = None) -> None:
+    msg = f"<<< HTTP {status}\nHeaders: {json.dumps(dict(headers), indent=2)}"
+    if body is not None:
+        if isinstance(body, dict):
+            msg += f"\nBody: {json.dumps(body, indent=2)}"
+        else:
+            msg += f"\nBody: {body}"
+    _LOGGER.debug(msg)
 
 
 class FlyboxCoordinator(DataUpdateCoordinator[dict]):
@@ -58,8 +76,11 @@ class FlyboxCoordinator(DataUpdateCoordinator[dict]):
             # Load the home page first so the router sets the session cookie.
             # The cookie must be present before the CSRF token request.
             try:
+                _LOGGER.debug(">>> GET %s (session init)", self._referer)
                 async with self._session.get(self._referer) as resp:
                     resp.raise_for_status()
+                    if _LOGGER.isEnabledFor(logging.DEBUG):
+                        _log_response(resp.status, resp.headers)
                     _LOGGER.debug("Session cookie established from home page")
             except aiohttp.ClientError as err:
                 _LOGGER.warning("Could not load Flybox home page to establish session: %s", err)
@@ -69,14 +90,19 @@ class FlyboxCoordinator(DataUpdateCoordinator[dict]):
         """Fetch a fresh CSRF token from the x_csrf_token endpoint."""
         session = await self._ensure_session()
         url = f"{self._csrf_url}?v={random.random()}"
+        headers = self._make_headers()
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _log_request("GET", url, headers)
         try:
-            async with session.get(url, headers=self._make_headers()) as resp:
+            async with session.get(url, headers=headers) as resp:
                 resp.raise_for_status()
                 token = resp.headers.get("X-Csrf-Token")
+                if _LOGGER.isEnabledFor(logging.DEBUG):
+                    _log_response(resp.status, resp.headers)
                 if not token:
                     raise UpdateFailed("No X-Csrf-Token in response headers")
                 self._csrf_token = token
-                _LOGGER.debug("Refreshed CSRF token from Flybox")
+                _LOGGER.debug("CSRF token acquired: %s", token)
         except aiohttp.ClientError as err:
             raise UpdateFailed(f"Failed to fetch CSRF token: {err}") from err
 
@@ -94,11 +120,15 @@ class FlyboxCoordinator(DataUpdateCoordinator[dict]):
         return {**device_data, **wifi_data}
 
     async def _fetch(self, session: aiohttp.ClientSession, keys: list[str]) -> dict:
-        async with session.post(
-            self._url, json={"keys": keys}, headers=self._make_headers()
-        ) as resp:
+        body = {"keys": keys}
+        headers = self._make_headers()
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _log_request("POST", self._url, headers, body)
+        async with session.post(self._url, json=body, headers=headers) as resp:
             resp.raise_for_status()
             result = await resp.json(content_type=None)
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                _log_response(resp.status, resp.headers, result)
         if result.get("retcode") != 0:
             raise UpdateFailed(f"Flybox API returned error retcode: {result.get('retcode')}")
         return result.get("data", {})
