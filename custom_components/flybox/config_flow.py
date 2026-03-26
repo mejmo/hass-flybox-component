@@ -14,6 +14,8 @@ from .const import DOMAIN, DEFAULT_HOST, DEFAULT_SCAN_INTERVAL, ENDPOINT
 
 _LOGGER = logging.getLogger(__name__)
 
+LOGIN_ENDPOINT = "/goform/get_login_info"
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("host", default=DEFAULT_HOST): str,
@@ -26,11 +28,39 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_connection(hass: HomeAssistant, host: str) -> str:
     """Validate router connectivity and return a title string."""
-    url = f"http://{host}{ENDPOINT}"
+    login_url = f"http://{host}{LOGIN_ENDPOINT}"
+    data_url = f"http://{host}{ENDPOINT}"
+    referer = f"http://{host}/home/index.html"
     timeout = aiohttp.ClientTimeout(total=10)
+
     try:
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.post(url, json={"keys": ["mnet_operator_name"]}) as resp:
+            # Step 1: obtain CSRF token
+            async with session.post(
+                login_url,
+                headers={
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Referer": referer,
+                },
+            ) as login_resp:
+                login_resp.raise_for_status()
+                csrf_token = login_resp.headers.get("X-Csrf-Token")
+                if not csrf_token:
+                    raise CannotConnect("No CSRF token in login response")
+
+            # Step 2: fetch operator name
+            async with session.post(
+                data_url,
+                json={"keys": ["mnet_operator_name"]},
+                headers={
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-Csrf-Token": csrf_token,
+                    "Referer": referer,
+                    "Origin": f"http://{host}",
+                },
+            ) as resp:
                 resp.raise_for_status()
                 result = await resp.json(content_type=None)
     except aiohttp.ClientError as err:
