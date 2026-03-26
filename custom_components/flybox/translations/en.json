@@ -1,0 +1,51 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Orange Flybox",
+        "description": "Enter the IP address of your Flybox router.",
+        "data": {
+          "host": "Router IP address",
+          "scan_interval": "Update interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the router. Check the IP address and ensure you are on the local network.",
+      "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This Flybox router is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "operator_name": { "name": "Operator" },
+      "network_mode": { "name": "Network Mode" },
+      "connection_type": { "name": "Connection Type" },
+      "signal_level": { "name": "Signal Level" },
+      "connection_status": { "name": "Connection Status" },
+      "sim_status": { "name": "SIM Status" },
+      "carrier_aggregation": { "name": "Carrier Aggregation" },
+      "uptime": { "name": "Uptime" },
+      "data_downloaded": { "name": "Data Downloaded" },
+      "data_uploaded": { "name": "Data Uploaded" },
+      "data_downloaded_roaming": { "name": "Data Downloaded (Roaming)" },
+      "data_uploaded_roaming": { "name": "Data Uploaded (Roaming)" },
+      "battery": { "name": "Battery" },
+      "battery_charge_status": { "name": "Battery Charge Status" },
+      "wifi_clients_24ghz": { "name": "WiFi Clients 2.4 GHz" },
+      "wifi_clients_guest": { "name": "WiFi Clients Guest" },
+      "wifi_clients_5ghz": { "name": "WiFi Clients 5 GHz" }
+    },
+    "binary_sensor": {
+      "internet_connected": { "name": "Internet Connected" },
+      "mobile_data": { "name": "Mobile Data" },
+      "roaming": { "name": "Roaming" },
+      "wifi_24ghz": { "name": "WiFi 2.4 GHz" },
+      "wifi_guest": { "name": "WiFi Guest" },
+      "wifi_5ghz": { "name": "WiFi 5 GHz" },
+      "band_steering": { "name": "Band Steering" }
+    }
+  }
+}
