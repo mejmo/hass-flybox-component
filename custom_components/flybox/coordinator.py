@@ -49,7 +49,12 @@ class FlyboxCoordinator(DataUpdateCoordinator[dict]):
     async def _ensure_session(self) -> aiohttp.ClientSession:
         if self._session is None or self._session.closed:
             timeout = aiohttp.ClientTimeout(total=10)
-            self._session = aiohttp.ClientSession(timeout=timeout)
+            # unsafe=True is required so the cookie jar accepts cookies
+            # from plain IP addresses (e.g. 192.168.2.1)
+            self._session = aiohttp.ClientSession(
+                timeout=timeout,
+                cookie_jar=aiohttp.CookieJar(unsafe=True),
+            )
         return self._session
 
     async def _refresh_csrf_token(self) -> None:

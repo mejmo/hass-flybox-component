@@ -35,7 +35,10 @@ async def validate_connection(hass: HomeAssistant, host: str) -> str:
     timeout = aiohttp.ClientTimeout(total=10)
 
     try:
-        async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with aiohttp.ClientSession(
+            timeout=timeout,
+            cookie_jar=aiohttp.CookieJar(unsafe=True),
+        ) as session:
             # Step 1: obtain CSRF token
             async with session.get(
                 csrf_url,
