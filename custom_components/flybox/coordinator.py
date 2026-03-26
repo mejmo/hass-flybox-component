@@ -55,6 +55,14 @@ class FlyboxCoordinator(DataUpdateCoordinator[dict]):
                 timeout=timeout,
                 cookie_jar=aiohttp.CookieJar(unsafe=True),
             )
+            # Load the home page first so the router sets the session cookie.
+            # The cookie must be present before the CSRF token request.
+            try:
+                async with self._session.get(self._referer) as resp:
+                    resp.raise_for_status()
+                    _LOGGER.debug("Session cookie established from home page")
+            except aiohttp.ClientError as err:
+                _LOGGER.warning("Could not load Flybox home page to establish session: %s", err)
         return self._session
 
     async def _refresh_csrf_token(self) -> None:
