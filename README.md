@@ -10,12 +10,52 @@ A Home Assistant custom integration for **Orange Flybox** mobile routers. It pol
 
 ---
 
+## Installation
+
+### Via HACS (recommended)
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mejmo&repository=hass-flybox-component&category=integration)
+
+1. Click the button above, or open HACS → **Integrations** → three-dot menu → **Custom repositories**.
+2. Add `https://github.com/mejmo/hass-flybox-component` with category **Integration**.
+3. Search for **Orange Flybox** and click **Download**.
+4. Restart Home Assistant.
+
+### Manual
+
+1. Download or clone this repository.
+2. Copy the `custom_components/flybox` directory into your HA configuration directory:
+   ```
+   config/custom_components/flybox/
+   ```
+3. Restart Home Assistant.
+
+---
+
+## Configuration
+
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=flybox)
+
+1. Click the button above, or go to **Settings → Devices & Services → Add Integration**.
+2. Search for **Orange Flybox**.
+3. Enter the router's IP address (default: `192.168.2.1`) and the desired polling interval (10–300 seconds, default: 30 s).
+4. Click **Submit**. HA will verify connectivity and create the integration.
+
+---
+
 ## Features
 
 - Local polling — no cloud dependency
 - Auto-discovery of operator name during setup
 - All data sourced from the router's built-in REST API
 - Full support for HACS
+
+---
+
+## Requirements
+
+- Home Assistant **2023.6.0** or newer
+- The Flybox router must be reachable from the HA host (same LAN or routed network)
 
 ---
 
@@ -54,46 +94,6 @@ A Home Assistant custom integration for **Orange Flybox** mobile routers. It pol
 | WiFi Guest | `on` when the guest access point is active |
 | WiFi 5 GHz | `on` when the 5 GHz access point is active |
 | Band Steering | `on` when band steering is enabled |
-
----
-
-## Requirements
-
-- Home Assistant **2023.6.0** or newer
-- The Flybox router must be reachable from the HA host (same LAN or routed network)
-
----
-
-## Installation
-
-### Via HACS (recommended)
-
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mejmo&repository=hass-flybox-component&category=integration)
-
-1. Click the button above, or open HACS → **Integrations** → three-dot menu → **Custom repositories**.
-2. Add `https://github.com/mejmo/hass-flybox-component` with category **Integration**.
-3. Search for **Orange Flybox** and click **Download**.
-4. Restart Home Assistant.
-
-### Manual
-
-1. Download or clone this repository.
-2. Copy the `custom_components/flybox` directory into your HA configuration directory:
-   ```
-   config/custom_components/flybox/
-   ```
-3. Restart Home Assistant.
-
----
-
-## Configuration
-
-[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=flybox)
-
-1. Click the button above, or go to **Settings → Devices & Services → Add Integration**.
-2. Search for **Orange Flybox**.
-3. Enter the router's IP address (default: `192.168.2.1`) and the desired polling interval (10–300 seconds, default: 30 s).
-4. Click **Submit**. HA will verify connectivity and create the integration.
 
 ---
 
