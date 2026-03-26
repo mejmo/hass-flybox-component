@@ -113,7 +113,7 @@ Tested with:
 
 | Device | Firmware |
 |--------|----------|
-| Orange Flybox (ZTE) | — |
+| MeiG Flybox SRT858M 5G | — |
 
 If your device works and is not listed, please open an issue or a PR.
 
