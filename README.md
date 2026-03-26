@@ -6,6 +6,8 @@
 
 A Home Assistant custom integration for **Orange Flybox** mobile routers. It polls the router's local API to expose network status, data usage, WiFi state, and battery information as Home Assistant entities.
 
+![Dashboard screenshot](docs/dashboard.png)
+
 > **Note:** No authentication is required. The router must be accessible on your local network (default gateway `192.168.2.1`).
 
 ---
