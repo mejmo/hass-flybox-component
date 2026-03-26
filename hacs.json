@@ -2,6 +2,5 @@
   "name": "Orange Flybox",
   "content_in_root": false,
   "render_readme": true,
-  "homeassistant": "2023.6.0",
-  "icon": "https://raw.githubusercontent.com/mejmo/hass-flybox-component/master/icon.png"
+  "homeassistant": "2023.6.0"
 }
